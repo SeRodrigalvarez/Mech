@@ -1,0 +1,54 @@
+grammar es.uam.eps.Medsl with org.eclipse.xtext.common.Terminals
+
+generate medsl "http://www.uam.es/eps/Medsl"
+
+Domainmodel:
+	
+	'package' package=Import
+	
+	imports+=Imports*
+	
+	'spec' 'for' name=ID 
+		'coverage' strategy=('state' | 'transition' | 'both') 
+		'loopCount' count=NUM '{'
+		initial+=InitialState+
+		states+=State*
+		transitions+=Transition*
+	'}';
+
+Imports:
+	'import' imp=Import
+;
+
+InitialState:
+	'initial' 'state' name=ID ('{'
+		constructor=Method
+	'}')? 
+;
+	
+State: 
+	'state' name=ID;
+	
+Transition:
+	'transition' state1=[AbstractState] '-' state2=[State] 
+	('guard' guard1=(Method | NUM) op=('==' | '!=' | '>' | '>=' | '<' | '<=') guard2=(Method | NUM))? 
+	'{'
+		command=Command
+		assert+=Assert*
+	'}';
+	
+AbstractState: State | InitialState;
+	
+Command: 'proc' proc=Proc;
+
+Assert: type=('assertEquals' | 'assertSame' | 'asssertNotSame') assert1=(Proc | NUM) ',' assert2=(Proc | NUM);
+
+Proc: (ID | Method)('.'(ID | Method))*;
+	
+Method: ID ('<' ID '>')? '(' ((Proc | NUM) (',' (Proc | NUM))*)? ')';
+
+//Assign: Proc Proc? '=' ('new')? Proc;
+
+Import: (ID '.')*ID;
+
+terminal NUM: ('0'..'9')+;
